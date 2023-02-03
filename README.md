@@ -1,11 +1,10 @@
-ISP Client Scheduled Events Reporter
-====================================
-This script queries an IBM Spectrum Protect server for
-events from scheduled client jobs.
+ISP Sessions Reporter
+=====================
+This script queries IBM Spectrum Protect session on an ISP server.
 
 SYNOPSIS
 ========
-  ispcse [--isp-server=<Str>] [--isp-admin=<Str>] [--domain=<Str>] [--node=<Str>]
+  ispsess [--isp-server=<Str>] [--isp-admin=<Str>]
 
 AUTHOR
 ======
