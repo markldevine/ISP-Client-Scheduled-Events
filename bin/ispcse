@@ -1,0 +1,130 @@
+#!/usr/bin/env raku
+
+use ISP::dsmadmc;
+use Terminal::ANSIColor;
+use Prettier::Table;
+
+my regex date-time-regex    {
+                                ^
+                                $<month>        = (\d\d)
+                                '/'
+                                $<day-of-month> = (\d\d)
+                                '/'
+                                $<year>         = (\d+)
+                                \s+
+                                $<hour>         = (\d\d)
+                                ':'
+                                $<minute>       = (\d\d)
+                                ':'
+                                $<second>       = (\d\d)
+                                $
+                            }
+
+sub MAIN (
+    Str:D   :$isp-server!,  #= ISP server name
+    Str:D   :$isp-admin!,   #= ISP server name
+    Int:D   :$days   = 0,   #= BEGINDATE=TODAY-days
+    Str:D   :$domain = '*', #= ISP DOMAIN name
+    Str     :$node,         #= ISP NODE name
+) {
+
+    my $dsmadmc     = ISP::dsmadmc.new(:$isp-server, :$isp-admin);
+    my @events      = $dsmadmc.execute(['QUERY', 'EVENT', $domain, '*', 'BEGINDATE=TODAY-' ~ $days, 'ENDDATE=TODAY', 'FORMAT=DETAILED']);
+    die unless @events.elems;
+    my $table = Prettier::Table.new:
+        title => 'IBM Spectrum Protect: ' ~ $isp-server ~ ' Events [' ~ DateTime(now).hh-mm-ss ~ ']',
+        field-names => [
+                        'Policy Domain Name',
+                        'Schedule Name',
+                        'Node Name',
+                        'Status',
+                        'Scheduled Start',
+                        'Actual Start',
+                        'Completed',
+                        'Duration',
+                        'Result',
+                        'Reason',
+                       ],
+        align       => %(
+                        'Policy Domain Name' => 'l',
+                        'Node Name' => 'l',
+                        'Reason' => 'l',
+                        ),
+    ;
+#   $table.hrules(Prettier::Table::Constrains::ALL);
+
+    my Str      $policy-domain-name;
+    my Str      $schedule-name;
+    my Str      $node-name;
+    my Str      $status;
+    my DateTime $scheduled-start;
+    my DateTime $actual-start;
+    my DateTime $completed;
+    my Str      $duration;
+    my Str      $result;
+    my Str      $reason;
+
+    for @events -> $event {
+        $node-name              = $event{'Node Name'}.Str           if $event{'Node Name'};
+        if $node {
+            next unless $node.uc eq $node-name.uc;
+        }
+        $policy-domain-name     = $event{'Policy Domain Name'}.Str  if $event{'Policy Domain Name'};
+        $schedule-name          = $event{'Schedule Name'}.Str       if $event{'Schedule Name'};
+        $status                 = $event{'Status'}.Str              if $event{'Reason'};
+        $scheduled-start        = Nil;
+        if $event{'Scheduled Start'} && $event{'Scheduled Start'} ~~ /<date-time-regex>/ {
+            $scheduled-start    = DateTime.new(
+                                                :month($<date-time-regex><month>),
+                                                :day($<date-time-regex><day-of-month>),
+                                                :year($<date-time-regex><year> < 100 ?? +$<date-time-regex><year> + 2000 !! +$<date-time-regex><year>),
+                                                :hour($<date-time-regex><hour>),
+                                                :minute($<date-time-regex><minute>),
+                                                :second($<date-time-regex><second>),
+                                              );
+        }
+        $actual-start           = Nil;
+        if $event{'Actual Start'} && $event{'Actual Start'} ~~ /<date-time-regex>/ {
+            $actual-start       = DateTime.new(
+                                                :month($<date-time-regex><month>),
+                                                :day($<date-time-regex><day-of-month>),
+                                                :year($<date-time-regex><year> < 100 ?? +$<date-time-regex><year> + 2000 !! +$<date-time-regex><year>),
+                                                :hour($<date-time-regex><hour>),
+                                                :minute($<date-time-regex><minute>),
+                                                :second($<date-time-regex><second>),
+                                              );
+        }
+        $completed              = Nil;
+        if $event{'Completed'} && $event{'Completed'} ~~ /<date-time-regex>/ {
+            $completed          = DateTime.new(
+                                                :month($<date-time-regex><month>),
+                                                :day($<date-time-regex><day-of-month>),
+                                                :year($<date-time-regex><year> < 100 ?? +$<date-time-regex><year> + 2000 !! +$<date-time-regex><year>),
+                                                :hour($<date-time-regex><hour>),
+                                                :minute($<date-time-regex><minute>),
+                                                :second($<date-time-regex><second>),
+                                              );
+        }
+        $duration               = Nil;
+        $duration               = DateTime.new($completed - $actual-start).hh-mm-ss if $completed && $actual-start;
+        $result                 = $event{'Result'}.Str              if $event{'Result'};
+        $reason                 = $event{'Reason'}.Str              if $event{'Reason'};
+        given $table {
+            .add-row: [
+                        $policy-domain-name ?? $policy-domain-name  !! ' ',
+                        $schedule-name      ?? $schedule-name       !! ' ',
+                        $node-name          ?? $node-name           !! ' ',
+                        $status             ?? $status              !! ' ',
+                        $scheduled-start    ?? $scheduled-start.Str !! ' ',
+                        $actual-start       ?? $actual-start.Str    !! ' ',
+                        $completed          ?? $completed.Str       !! ' ',
+                        $duration           ?? $duration            !! ' ',
+                        $result             ?? $result              !! ' ',
+                        $reason             ?? $reason              !! ' ',
+                      ];
+        }
+    }
+    put $table;
+}
+
+=finish
