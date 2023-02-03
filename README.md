@@ -1,10 +1,10 @@
 ISP Sessions Reporter
 =====================
-This script queries IBM Spectrum Protect session on an ISP server.
+This script queries IBM Spectrum Protect events.
 
 SYNOPSIS
 ========
-  ispsess [--isp-server=<Str>] [--isp-admin=<Str>]
+  ispces [--isp-server=<Str>] [--isp-admin=<Str>]
 
 AUTHOR
 ======
