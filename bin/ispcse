@@ -31,7 +31,7 @@ sub MAIN (
     my @events      = $dsmadmc.execute(['QUERY', 'EVENT', $domain, '*', 'BEGINDATE=TODAY-' ~ $days, 'ENDDATE=TODAY', 'FORMAT=DETAILED']);
     die unless @events.elems;
     my $table = Prettier::Table.new:
-        title => 'IBM Spectrum Protect: ' ~ $isp-server ~ ' Events [' ~ DateTime(now).hh-mm-ss ~ ']',
+        title => 'IBM Spectrum Protect: ' ~ $isp-server ~ ' Events [' ~ DateTime(now).local.hh-mm-ss ~ ']',
         field-names => [
                         'Policy Domain Name',
                         'Schedule Name',
