@@ -110,8 +110,12 @@ sub MAIN (
     Str:D   :$domain                        = '*',  #= ISP DOMAIN name
     Str     :$node,                                 #= ISP NODE name
     Bool    :$sort-by-node,                         #= Sort output by Node Name
+    Str     :$window-start-time,                    #= Daily backup window start time
 ) {
     my @command     = ['QUERY', 'EVENT', $domain, '*', 'BEGINDATE=TODAY-' ~ $days, 'ENDDATE=TODAY', 'FORMAT=DETAILED'];
+    with $window-start-time {
+        @command.append: 'BEGINTIME=' ~ $0 ~ ':' ~ $1 if $window-start-time ~~ / ^ (\d ** 1..2) ':' (\d ** 1..2) /;
+    }
     my @fields;
     @fields.push:   ISP::Server::Reporter::Field.new(:name('Policy Domain Name'),   :alignment('l'));
     @fields.push:   ISP::Server::Reporter::Field.new(:name('Schedule Name'),        :alignment('c'));
@@ -123,7 +127,7 @@ sub MAIN (
     @fields.push:   ISP::Server::Reporter::Field.new(:name('Duration'),             :alignment('c'));
     @fields.push:   ISP::Server::Reporter::Field.new(:name('Result'),               :alignment('c'));
     @fields.push:   ISP::Server::Reporter::Field.new(:name('Reason'),               :alignment('l'));
-    my $sort-by     = 'Policy Domain Name';
+    my $sort-by     = 'Scheduled Start';
     $sort-by        = 'Node Name' if $sort-by-node;
     my $reporter    = Reporter.new(
                                     :$isp-server,
