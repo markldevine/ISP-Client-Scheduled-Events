@@ -100,21 +100,25 @@ class Reporter does ISP::Server::Reporter {
 }
 
 sub MAIN (
-    Str:D   :$isp-server!,                          #= ISP server name
-    Str:D   :$isp-admin!,                           #= ISP server name
-    Int:D   :$interval      where * >= 5    = 58,   #= Refresh every --interval seconds (minimum 5s)
-    Int:D   :$count                         = 1,    #= Number of refreshes (0 is infinity)
-    Bool    :$grid,                                 #= Full table grid
-    Bool    :$clear,                                #= Clear the screen with each iteration
-    Int:D   :$days                          = 0,    #= BEGINDATE=TODAY-days
-    Str:D   :$domain                        = '*',  #= ISP DOMAIN name
-    Str     :$node,                                 #= ISP NODE name
-    Bool    :$sort-by-node,                         #= Sort output by Node Name
-    Str     :$window-start-time,                    #= Daily backup window start time
+    Str:D   :$isp-server!,                              #= ISP server name
+    Str:D   :$isp-admin!,                               #= ISP server name
+    Int:D   :$interval      where * >= 5        = 58,   #= Refresh every --interval seconds (minimum 5s)
+    Int:D   :$count                             = 1,    #= Number of refreshes (0 is infinity)
+    Bool    :$grid,                                     #= Full table grid
+    Bool    :$clear,                                    #= Clear the screen with each iteration
+    Int:D   :$days                              = 0,    #= BEGINDATE=TODAY-days
+    Str:D   :$domain                            = '*',  #= ISP DOMAIN name
+    Str     :$node,                                     #= ISP NODE name
+    Bool    :$sort-by-node,                             #= Sort output by Node Name
+    Int     :$window-hour   where 0 <= * <= 24,         #= Daily backup window hour
 ) {
-    my @command     = ['QUERY', 'EVENT', $domain, '*', 'BEGINDATE=TODAY-' ~ $days, 'ENDDATE=TODAY', 'FORMAT=DETAILED'];
-    with $window-start-time {
-        @command.append: 'BEGINTIME=' ~ $0 ~ ':' ~ $1 if $window-start-time ~~ / ^ (\d ** 1..2) ':' (\d ** 1..2) /;
+    my @command         = ['QUERY', 'EVENT', $domain, '*', 'BEGINDATE=TODAY-' ~ $days, 'ENDDATE=TODAY', 'FORMAT=DETAILED'];
+    with $window-hour {
+        my $d           = DateTime.new(now);
+        my $start-time  = DateTime.new(:year($d.year), :month($d.month), :day($d.day), :hour($window-hour), :0minute);
+        my $end-time    = DateTime.new(:year($d.year), :month($d.month), :day($d.day), :hour($window-hour), :0minute).earlier(:seconds((60 * 60 * 24) + 1));
+        @command.append: 'BEGINTIME='   ~ $start-time.hh-mm-ss;
+        @command.append: 'ENDTIME='     ~ $end-time.hh-mm-ss if $days;
     }
     my @fields;
     @fields.push:   ISP::Server::Reporter::Field.new(:name('Policy Domain Name'),   :alignment('l'));
