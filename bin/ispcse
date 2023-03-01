@@ -42,7 +42,7 @@ class Reporter does ISP::Server::Reporter {
             }
             $policy-domain-name     = $event{'Policy Domain Name'}.Str  if $event{'Policy Domain Name'};
             $schedule-name          = $event{'Schedule Name'}.Str       if $event{'Schedule Name'};
-            $status                 = $event{'Status'}.Str              if $event{'Statue'};
+            $status                 = $event{'Status'}.Str              if $event{'Status'};
             $scheduled-start        = Nil;
             if $event{'Scheduled Start'} && $event{'Scheduled Start'} ~~ /<date-time-regex>/ {
                 $scheduled-start    = DateTime.new(
