@@ -87,9 +87,9 @@ class Reporter does ISP::Server::Reporter {
                             $schedule-name      ?? $schedule-name       !! ' ',
                             $node-name          ?? $node-name           !! ' ',
                             $status             ?? $status              !! ' ',
-                            $scheduled-start    ?? $scheduled-start.Str !! ' ',
-                            $actual-start       ?? $actual-start.Str    !! ' ',
-                            $completed          ?? $completed.Str       !! ' ',
+                            $scheduled-start    ?? $scheduled-start.month.fmt("%02d")   ~ '/' ~ $scheduled-start.day    ~ ' @' ~ $scheduled-start.hh-mm-ss  !! ' ',
+                            $actual-start       ?? $actual-start.month.fmt("%02d")      ~ '/' ~ $actual-start.day       ~ ' @' ~ $actual-start.hh-mm-ss     !! ' ',
+                            $completed          ?? $completed.month.fmt("%02d")         ~ '/' ~ $completed.day          ~ ' @' ~ $completed.hh-mm-ss        !! ' ',
                             $duration           ?? $duration            !! ' ',
                             $result             ?? $result              !! ' ',
                             $reason             ?? $reason              !! ' ',
@@ -110,7 +110,7 @@ sub MAIN (
     Str:D   :$domain                            = '*',  #= ISP DOMAIN name
     Str     :$node,                                     #= ISP NODE name
     Bool    :$sort-by-node,                             #= Sort output by Node Name
-    Int     :$window-hour   where 0 <= * <= 24,         #= Daily backup window hour
+    Int     :$window-hour   where 0 <= * <= 24  = 0,    #= Daily backup window hour
 ) {
     my @command         = ['QUERY', 'EVENT', $domain, '*', 'BEGINDATE=TODAY-' ~ $days, 'ENDDATE=TODAY', 'FORMAT=DETAILED'];
     with $window-hour {
