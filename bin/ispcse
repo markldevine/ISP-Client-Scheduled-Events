@@ -36,12 +36,16 @@ class Reporter does ISP::Server::Reporter {
         my Str      $reason;                                            #             Reason: The operation completed successfully, but some files were not processed.
 
         for @events -> $event {
+            $node-name              = '';
             $node-name              = $event{'Node Name'}.Str           if $event{'Node Name'};
             if self.node {
                 next unless self.node.uc eq $node-name.uc;
             }
+            $policy-domain-name     = '';
             $policy-domain-name     = $event{'Policy Domain Name'}.Str  if $event{'Policy Domain Name'};
+            $schedule-name          = '';
             $schedule-name          = $event{'Schedule Name'}.Str       if $event{'Schedule Name'};
+            $status                 = '';
             $status                 = $event{'Status'}.Str              if $event{'Status'};
             $scheduled-start        = Nil;
             if $event{'Scheduled Start'} && $event{'Scheduled Start'} ~~ /<date-time-regex>/ {
@@ -78,7 +82,9 @@ class Reporter does ISP::Server::Reporter {
             }
             $duration               = Nil;
             $duration               = DateTime.new($completed - $actual-start).hh-mm-ss if $completed && $actual-start;
+            $result                 = '';
             $result                 = $event{'Result'}.Str              if $event{'Result'};
+            $reason                 = '';
             $reason                 = $event{'Reason'}.Str              if $event{'Reason'};
             given $!table {
                 .add-row: [
