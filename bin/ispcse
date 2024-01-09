@@ -23,7 +23,7 @@ class Reporter does ISP::Server::Reporter {
     has $.domain;
     has $.node;
 
-    method process-rows (@events) {
+    method process-rows ($events) {
         my Str      $policy-domain-name;                                # Policy Domain Name: BA
         my Str      $schedule-name;                                     #      Schedule Name: SCH_1600
         my Str      $node-name;                                         #          Node Name: ISP01
@@ -35,7 +35,7 @@ class Reporter does ISP::Server::Reporter {
         my Str      $result;                                            #             Result: 4
         my Str      $reason;                                            #             Reason: The operation completed successfully, but some files were not processed.
 
-        for @events -> $event {
+        for $events.list -> $event {
             $node-name              = '';
             $node-name              = $event{'Node Name'}.Str           if $event{'Node Name'};
             if self.node {
