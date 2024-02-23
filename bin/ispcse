@@ -1,6 +1,12 @@
 #!/usr/bin/env raku
 
+use lib '/home/mdevine/github.com/ISP-Server-Reporter-Role/lib';
+use lib '/home/mdevine/github.com/ISP-dsmadmc/lib';
+
 use ISP::Server::Reporter;
+use Our::Grid;
+use Our::Grid::Cell;
+use Our::Utilities;
 
 my regex date-time-regex    {
                                 ^
@@ -22,6 +28,19 @@ class Reporter does ISP::Server::Reporter {
 
     has $.domain;
     has $.node;
+
+    method process-headings () {
+        $!grid.add-heading: :cell(Our::Grid::Cell.new: :text('Policy Domain Name'), :justification(justify-left));
+        $!grid.add-heading: :cell(Our::Grid::Cell.new: :text('Schedule Name'),      :justification(justify-center));
+        $!grid.add-heading: :cell(Our::Grid::Cell.new: :text('Node Name'),          :justification(justify-left));
+        $!grid.add-heading: :cell(Our::Grid::Cell.new: :text('Status'),             :justification(justify-center));
+        $!grid.add-heading: :cell(Our::Grid::Cell.new: :text('Scheduled Start'),    :justification(justify-center));
+        $!grid.add-heading: :cell(Our::Grid::Cell.new: :text('Actual Start'),       :justification(justify-center));
+        $!grid.add-heading: :cell(Our::Grid::Cell.new: :text('Completed'),          :justification(justify-center));
+        $!grid.add-heading: :cell(Our::Grid::Cell.new: :text('Duration'),           :justification(justify-center));
+        $!grid.add-heading: :cell(Our::Grid::Cell.new: :text('Result'),             :justification(justify-center));
+        $!grid.add-heading: :cell(Our::Grid::Cell.new: :text('Reason'),             :justification(justify-left));
+    }
 
     method process-rows ($events) {
         my Str      $policy-domain-name;                                # Policy Domain Name: BA
@@ -86,20 +105,27 @@ class Reporter does ISP::Server::Reporter {
             $result                 = $event{'Result'}.Str              if $event{'Result'};
             $reason                 = '';
             $reason                 = $event{'Reason'}.Str              if $event{'Reason'};
-            given $!table {
-                .add-row: [
-                            $policy-domain-name ?? $policy-domain-name  !! ' ',
-                            $schedule-name      ?? $schedule-name       !! ' ',
-                            $node-name          ?? $node-name           !! ' ',
-                            $status             ?? $status              !! ' ',
-                            $scheduled-start    ?? $scheduled-start.month.fmt("%02d")   ~ '/' ~ $scheduled-start.day.fmt("%02d")    ~ ' @' ~ $scheduled-start.hh-mm-ss  !! ' ',
-                            $actual-start       ?? $actual-start.month.fmt("%02d")      ~ '/' ~ $actual-start.day.fmt("%02d")       ~ ' @' ~ $actual-start.hh-mm-ss     !! ' ',
-                            $completed          ?? $completed.month.fmt("%02d")         ~ '/' ~ $completed.day.fmt("%02d")          ~ ' @' ~ $completed.hh-mm-ss        !! ' ',
-                            $duration           ?? $duration            !! ' ',
-                            $result             ?? $result              !! ' ',
-                            $reason             ?? $reason              !! ' ',
-                          ];
+            $!grid.add-cell: $policy-domain-name ?? $policy-domain-name  !! ' ', :justification(justify-left);
+            $!grid.add-cell: $schedule-name      ?? $schedule-name       !! ' ', :justification(justify-center);
+            $!grid.add-cell: $node-name          ?? $node-name           !! ' ', :justification(justify-left);
+            given $status {
+                when 'Failed'       {
+                    $!grid.add-cell: $status     ?? $status              !! ' ', :justification(justify-center), :foreground<orange>;
+                }
+                when 'Missed'       {
+                    $!grid.add-cell: $status     ?? $status              !! ' ', :justification(justify-center), :foreground<red>;
+                }
+                default             {
+                    $!grid.add-cell: $status     ?? $status              !! ' ', :justification(justify-center);
+                }
             }
+            $!grid.add-cell: $scheduled-start    ?? $scheduled-start.month.fmt("%02d")   ~ '/' ~ $scheduled-start.day.fmt("%02d")    ~ ' @' ~ $scheduled-start.hh-mm-ss  !! ' ', :justification(justify-center);
+            $!grid.add-cell: $actual-start       ?? $actual-start.month.fmt("%02d")      ~ '/' ~ $actual-start.day.fmt("%02d")       ~ ' @' ~ $actual-start.hh-mm-ss     !! ' ', :justification(justify-center);
+            $!grid.add-cell: $completed          ?? $completed.month.fmt("%02d")         ~ '/' ~ $completed.day.fmt("%02d")          ~ ' @' ~ $completed.hh-mm-ss        !! ' ', :justification(justify-center);
+            $!grid.add-cell: $duration           ?? $duration            !! ' ', :justification(justify-center);
+            $!grid.add-cell: $result             ?? $result              !! ' ', :justification(justify-center);
+            $!grid.add-cell: $reason             ?? $reason              !! ' ', :justification(justify-left);
+            $!grid.current-row++;
         }
     }
 }
@@ -109,12 +135,10 @@ sub MAIN (
     Str:D   :$isp-admin!,                                   #= ISP server name
     Int:D   :$interval      where * >= 5        = 58,       #= Refresh every --interval seconds (minimum 5s)
     Int:D   :$count                             = 1,        #= Number of refreshes (0 is infinity)
-    Bool    :$grid,                                         #= Full table grid
     Bool    :$clear,                                        #= Clear the screen with each iteration
     Int:D   :$days                              = 0,        #= BEGINDATE=TODAY-days
     Str:D   :$domain                            = '*',      #= ISP DOMAIN name
     Str     :$node,                                         #= ISP NODE name
-    Bool    :$sort-by-node,                                 #= Sort output by Node Name
     Bool    :$cache                             = False,    #= Stash command outputs in cache
     Int     :$window-hour   where 0 <= * <= 24  = 0,        #= Daily backup window hour
 ) {
@@ -126,32 +150,16 @@ sub MAIN (
         @command.append: 'BEGINTIME='   ~ $start-time.hh-mm-ss;
         @command.append: 'ENDTIME='     ~ $end-time.hh-mm-ss if $days;
     }
-    my @fields;
-    @fields.push:   ISP::Server::Reporter::Field.new(:name('Policy Domain Name'),   :alignment('l'));
-    @fields.push:   ISP::Server::Reporter::Field.new(:name('Schedule Name'),        :alignment('c'));
-    @fields.push:   ISP::Server::Reporter::Field.new(:name('Node Name'),            :alignment('l'));
-    @fields.push:   ISP::Server::Reporter::Field.new(:name('Status'),               :alignment('c'));
-    @fields.push:   ISP::Server::Reporter::Field.new(:name('Scheduled Start'),      :alignment('c'));
-    @fields.push:   ISP::Server::Reporter::Field.new(:name('Actual Start'),         :alignment('c'));
-    @fields.push:   ISP::Server::Reporter::Field.new(:name('Completed'),            :alignment('c'));
-    @fields.push:   ISP::Server::Reporter::Field.new(:name('Duration'),             :alignment('c'));
-    @fields.push:   ISP::Server::Reporter::Field.new(:name('Result'),               :alignment('c'));
-    @fields.push:   ISP::Server::Reporter::Field.new(:name('Reason'),               :alignment('l'));
-    my $sort-by     = 'Scheduled Start';
-    $sort-by        = 'Node Name' if $sort-by-node;
     my $reporter    = Reporter.new(
                                     :$isp-server,
                                     :$isp-admin,
                                     :$count,
-                                    :$grid,
                                     :$clear,
                                     :$interval,
                                     :title('IBM Spectrum Protect: ' ~ $isp-server ~ ' Client Events'),
                                     :@command,
-                                    :@fields,
                                     :$domain,
                                     :$node,
-                                    :$sort-by,
                                     :$cache,
                                   );
     $reporter.loop;
