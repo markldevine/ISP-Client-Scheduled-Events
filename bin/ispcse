@@ -144,7 +144,14 @@ sub MAIN (
     Bool    :$cache                                     = False,    #= Stash command outputs in cache
     Int     :$window-hour   where 0 <= * <= 24          = 0,        #= Daily backup window hour
     Str     :$sort-columns,
-    Bool    :$tui,
+    Bool    :$csv,                                                  #= dump CSV to STDOUT
+    Bool    :$gui,                                                  #= Graphical User Interface
+    Bool    :$html,                                                 #= dump HTML to STDOUT
+    Bool    :$json,                                                 #= dump JSON to STDOUT
+    Bool    :$text,                                                 #= TEXT print
+    Bool    :$tui,                                                  #= Terminal User Interface
+    Bool    :$xml,                                                  #= dump XML to STDOUT
+
 ) {
     my @sort-columns;
     @sort-columns       = $sort-columns.split(',').map({ $_.Int }) if $sort-columns;
