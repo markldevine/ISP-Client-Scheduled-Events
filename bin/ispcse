@@ -178,7 +178,13 @@ sub MAIN (
                                     :$node,
                                     :$cache,
                                     :@sort-columns,
+                                    :$csv,
+                                    :$gui,
+                                    :$html,
+                                    :$json,
+                                    :$text,
                                     :$tui,
+                                    :$xml,
                                   );
     $reporter.loop;
 }
