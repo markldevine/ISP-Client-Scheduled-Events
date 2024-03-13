@@ -151,10 +151,15 @@ sub MAIN (
     Bool    :$gui,                                                  #= Graphical User Interface
     Bool    :$html,                                                 #= dump HTML to STDOUT
     Bool    :$json,                                                 #= dump JSON to STDOUT
+#   Grid-Email-Formats  :$mail-body-format,                         #= email body format
+#                       :$mail-body-format,                         #= email body format
+#                       :$mail-from,                                #= email 'From:' addressee
+#                       :@mail-to,                                  #= accumulate email 'To:' addressees
+#                       :@mail-cc                       = (),       #= accumulate email 'Cc:' addressees
+#                       :@mail-bcc                      = (),       #= accumulate email 'Bcc:' addressees
     Bool    :$text,                                                 #= TEXT print
     Bool    :$tui,                                                  #= Terminal User Interface
     Bool    :$xml,                                                  #= dump XML to STDOUT
-
 ) {
     my @sort-columns;
     @sort-columns       = $sort-columns.split(',').map({ $_.Int }) if $sort-columns;
@@ -166,6 +171,15 @@ sub MAIN (
         @command.append: 'BEGINTIME='   ~ $start-time.hh-mm-ss;
         @command.append: 'ENDTIME='     ~ $end-time.hh-mm-ss if $days;
     }
+#   my $from                = $mail-from;
+#   my $format              = $mail-body-format;
+#   if $mail-from && @mail-to.elems {
+#       die '--mail-from=<email-address> required to send mail!' unless $mail-from;
+#       die '--mail-to=<email-address[,email-address]> required to send mail!' unless @mail-to.elems;
+#       $from               = $mail-from[0] if $mail-from ~~ Array;
+#       $format             = $mail-body-format[0] if $mail-body-format ~~ Array;
+#       $mailing = True;
+#   }
     my $reporter    = Reporter.new(
                                     :$isp-server,
                                     :$isp-admin,
@@ -182,6 +196,11 @@ sub MAIN (
                                     :$gui,
                                     :$html,
                                     :$json,
+#                                   :$mail-body-format($mail-body-format ~~ Array ?? $mail-body-format[0] !! $mail-body-format),
+#                                   :mail-from($mail-from ~~ Array ?? $mail-from[0] !! $mail-from),
+#                                   :@mail-to,
+#                                   :@mail-cc,
+#                                   :@mail-bcc,
                                     :$text,
                                     :$tui,
                                     :$xml,
