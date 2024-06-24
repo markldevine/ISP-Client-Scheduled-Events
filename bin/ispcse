@@ -146,7 +146,6 @@ sub MAIN (
     Str:D       :$domain                                    = '*',      #= ISP DOMAIN name
     Str         :$node,                                                 #= ISP NODE name
     Bool        :$cache                                     = False,    #= Stash command outputs in cache
-    Mu          :$expire-after,                                         #= Set a purge timer for cache
     Int         :$window-hour   where 0 <= * <= 24          = 0,        #= Daily backup window hour
     Str         :$sort-columns,
     Bool        :$csv,                                                  #= dump CSV to STDOUT
@@ -163,9 +162,7 @@ sub MAIN (
     Bool        :$tui,                                                  #= Terminal User Interface
     Bool        :$xml,                                                  #= dump XML to STDOUT
 ) {
-    if $expire-after && $expire-after >= 1 {
-        $expire-after   = DateTime.new(now + $expire-after);
-    }
+    my $expire-after    = DateTime.new(now + (24 * 60 * 60));
     my @sort-columns;
     @sort-columns       = $sort-columns.split(',').map({ $_.Int }) if $sort-columns;
     my @command         = ['QUERY', 'EVENT', $domain, '*', 'BEGINDATE=TODAY-' ~ $days, 'ENDDATE=TODAY', 'FORMAT=DETAILED'];
