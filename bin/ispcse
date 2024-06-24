@@ -1,6 +1,7 @@
 #!/usr/bin/env raku
 
 #use lib '/home/mdevine/github.com/raku-Our-Utilities/lib';
+#use lib '/home/mdevine/github.com/raku-Our-Cache/lib';
 #use lib '/home/mdevine/github.com/raku-Our-Grid/lib';
 #use lib '/home/mdevine/github.com/ISP-Server-Reporter-Role/lib';
 #use lib '/home/mdevine/github.com/ISP-dsmadmc/lib';
@@ -136,30 +137,31 @@ class Reporter does ISP::Server::Reporter {
 }
 
 sub MAIN (
-    Str:D   :$isp-server!,                                          #= ISP server name
-    Str:D   :$isp-admin!,                                           #= ISP server name
-    Int:D   :$interval      where * >= 5                = 58,       #= Refresh every --interval seconds (minimum 5s)
-    Int:D   :$count                                     = 1,        #= Number of refreshes (0 is infinity)
-    Bool    :$clear,                                                #= Clear the screen with each iteration
-    Int:D   :$days                                      = 0,        #= BEGINDATE=TODAY-days
-    Str:D   :$domain                                    = '*',      #= ISP DOMAIN name
-    Str     :$node,                                                 #= ISP NODE name
-    Bool    :$cache                                     = False,    #= Stash command outputs in cache
-    Int     :$window-hour   where 0 <= * <= 24          = 0,        #= Daily backup window hour
-    Str     :$sort-columns,
-    Bool    :$csv,                                                  #= dump CSV to STDOUT
-    Bool    :$gui,                                                  #= Graphical User Interface
-    Bool    :$html,                                                 #= dump HTML to STDOUT
-    Bool    :$json,                                                 #= dump JSON to STDOUT
+    Str:D       :$isp-server!,                                          #= ISP server name
+    Str:D       :$isp-admin!,                                           #= ISP server name
+    Int:D       :$interval      where * >= 5                = 58,       #= Refresh every --interval seconds (minimum 5s)
+    Int:D       :$count                                     = 1,        #= Number of refreshes (0 is infinity)
+    Bool        :$clear,                                                #= Clear the screen with each iteration
+    Int:D       :$days                                      = 0,        #= BEGINDATE=TODAY-days
+    Str:D       :$domain                                    = '*',      #= ISP DOMAIN name
+    Str         :$node,                                                 #= ISP NODE name
+    Bool        :$cache                                     = False,    #= Stash command outputs in cache
+    DateTime    :$expire-after,                                         #= Set a purge timer for cache
+    Int         :$window-hour   where 0 <= * <= 24          = 0,        #= Daily backup window hour
+    Str         :$sort-columns,
+    Bool        :$csv,                                                  #= dump CSV to STDOUT
+    Bool        :$gui,                                                  #= Graphical User Interface
+    Bool        :$html,                                                 #= dump HTML to STDOUT
+    Bool        :$json,                                                 #= dump JSON to STDOUT
 #   Grid-Email-Formats  :$mail-body-format,                         #= email body format
 #                       :$mail-body-format,                         #= email body format
 #                       :$mail-from,                                #= email 'From:' addressee
 #                       :@mail-to,                                  #= accumulate email 'To:' addressees
 #                       :@mail-cc                       = (),       #= accumulate email 'Cc:' addressees
 #                       :@mail-bcc                      = (),       #= accumulate email 'Bcc:' addressees
-    Bool    :$text,                                                 #= TEXT print
-    Bool    :$tui,                                                  #= Terminal User Interface
-    Bool    :$xml,                                                  #= dump XML to STDOUT
+    Bool        :$text,                                                 #= TEXT print
+    Bool        :$tui,                                                  #= Terminal User Interface
+    Bool        :$xml,                                                  #= dump XML to STDOUT
 ) {
     my @sort-columns;
     @sort-columns       = $sort-columns.split(',').map({ $_.Int }) if $sort-columns;
@@ -191,6 +193,7 @@ sub MAIN (
                                     :$domain,
                                     :$node,
                                     :$cache,
+                                    :$expire-after,
                                     :@sort-columns,
                                     :$csv,
                                     :$gui,
