@@ -4,8 +4,9 @@
 #use lib '/home/mdevine/github.com/raku-Our-Cache/lib';
 #use lib '/home/mdevine/github.com/raku-Our-Grid/lib';
 #use lib '/home/mdevine/github.com/ISP-Server-Reporter-Role/lib';
-#use lib '/home/mdevine/github.com/ISP-dsmadmc/lib';
+use lib '/home/mdevine/github.com/ISP-dsmadmc/lib';
 
+use Getopt::Long;
 use ISP::Server::Reporter;
 use Our::Grid;
 use Our::Grid::Cell;
@@ -112,10 +113,10 @@ class Reporter does ISP::Server::Reporter {
             $!grid.add-cell: $schedule-name      ?? $schedule-name       !! ' ', :justification<center>;
             $!grid.add-cell: $node-name          ?? $node-name           !! ' ', :justification<left>;
             given $status {
-                when 'Started'       {
+                when 'Started'      {
                     $!grid.add-cell: $status     ?? $status              !! ' ', :justification<center>, :foreground<green>;
                 }
-                when 'Failed'       {
+                when /^Failed/      {
                     $!grid.add-cell: $status     ?? $status              !! ' ', :justification<center>, :foreground<orange>;
                 }
                 when 'Missed'       {
