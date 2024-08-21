@@ -113,19 +113,19 @@ class Reporter does ISP::Server::Reporter {
             $!grid.add-cell: $schedule-name      ?? $schedule-name       !! ' ', :justification<center>;
             $!grid.add-cell: $node-name          ?? $node-name           !! ' ', :justification<left>;
             given $status {
-                when 'Started'      {
+                when 'Started'          {
                     $!grid.add-cell: $status     ?? $status              !! ' ', :justification<center>, :foreground<green>;
                 }
-                when /^In Progress/ {
+                when /^In \s Progress/  {
                     $!grid.add-cell: $status     ?? $status              !! ' ', :justification<center>, :foreground<yellow>;
                 }
-                when /^Failed/      {
+                when /^Failed/          {
                     $!grid.add-cell: $status     ?? $status              !! ' ', :justification<center>, :foreground<orange>;
                 }
-                when 'Missed'       {
+                when 'Missed'           {
                     $!grid.add-cell: $status     ?? $status              !! ' ', :justification<center>, :foreground<red>;
                 }
-                default             {
+                default                 {
                     $!grid.add-cell: $status     ?? $status              !! ' ', :justification<center>;
                 }
             }
