@@ -116,6 +116,9 @@ class Reporter does ISP::Server::Reporter {
                 when 'Started'      {
                     $!grid.add-cell: $status     ?? $status              !! ' ', :justification<center>, :foreground<green>;
                 }
+                when /^In Progress/ {
+                    $!grid.add-cell: $status     ?? $status              !! ' ', :justification<center>, :foreground<yellow>;
+                }
                 when /^Failed/      {
                     $!grid.add-cell: $status     ?? $status              !! ' ', :justification<center>, :foreground<orange>;
                 }
